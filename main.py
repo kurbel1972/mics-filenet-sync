@@ -25,14 +25,20 @@ def main():
     logging.info("************************************ Main - Starting MICS FileNet Sync... ************************************")
     logging.info("************************************                                      ************************************")
     logging.info("**************************************************************************************************************")
-    if is_vpn_connected():
+    if is_vpn_connected():  # Commented - also works from office network
+    # if True:  # Allow execution from VPN or office network
         try:
             # 1st: Mount network drives
             print(" Mounting network drives...")
             logging.info("*********************************** Main - Begin Mounting network drives... **********************************")
             drive_manager = NetworkDriveManager()
-            drive_manager.mount_network_drives()
+            mounted_drives = drive_manager.mount_network_drives()
             logging.info("************************************ Main - End Mounting network drives... ***********************************")
+            
+            if not mounted_drives:
+                print(" No network drives were mounted successfully. Exiting.")
+                logging.error("No network drives were mounted successfully. Exiting.")
+                return
 
             if len(sys.argv) > 1:
                 date_input = sys.argv[1]
@@ -46,7 +52,7 @@ def main():
 
             # 2st: Copy files in MICS to history
             logging.info(f"************************** Main - Begin Copying files to history for date: {date_input} ************************")
-            copier = HistoryCopier(date_input)
+            copier = HistoryCopier(date_input, mounted_drives)
             all_files_collected = copier.copy_files_to_history()
             print(f"\n Total files detected for history: {len(all_files_collected)}")
             logging.info(f"*********************************** Main - End Total files detected for history: {len(all_files_collected)} ***********************************")

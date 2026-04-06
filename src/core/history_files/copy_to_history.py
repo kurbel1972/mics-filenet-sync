@@ -7,11 +7,13 @@ import logging
 
 
 class HistoryCopier:
-    def __init__(self, date_input):
+    def __init__(self, date_input, mounted_drives=None):
         self.date_input = date_input
         self.base_dir = os.path.join("G:\\Lyngsoe", date_input.replace("-", ""))
         self.history_dir = os.path.join("G:\\History\\Lyngsoe", date_input.replace("-", ""))
         self.db_manager = HistoryFilesManager()
+        # Use mounted_drives if provided, otherwise fallback to DRIVES from config
+        self.drives = mounted_drives if mounted_drives is not None else DRIVES
 
     def ensure_dir(self, path):
         logging.info(f"Ensuring directory exists: {path}")
@@ -54,7 +56,7 @@ class HistoryCopier:
         self.ensure_dir(self.history_dir)
 
         all_files = []
-        for drive in map(str.strip, DRIVES):
+        for drive in map(str.strip, self.drives):
             print(f"\n Scanning drive: {drive}")
             logging.info(f"Scanning drive: {drive}")
             tif_files = list_tif_files_by_date(drive, self.date_input)

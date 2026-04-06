@@ -35,20 +35,27 @@ class NetworkDriveManager:
             result = subprocess.run(command, capture_output=True, text=True, shell=True)
             if result.returncode != 0:
                 print(f" Failed to map {drive}: {result.stderr.strip()}")
+                logging.warning(f"Failed to map {drive} to {path}: {result.stderr.strip()}")
+                return False
             else:
                 print(f" Drive {drive} mapped successfully.")
-            logging.info(f"Mapped {drive} to {path} successfully.")
+                logging.info(f"Mapped {drive} to {path} successfully.")
+                return True
         except Exception as e:
             print(f" Exception while mapping {drive}: {str(e)}")
             logging.error(f"Error mapping {drive} to {path}: {str(e)}")
+            return False
 
     def mount_network_drives(self):
         logging.info("Mounting network drives...")
+        mounted_drives = []
         for drive, path in zip(self.drives, self.paths):
             if not (drive and path):
                 continue
-            self.map_drive(drive, path)  # Tenta sempre montar
-        logging.info("Finished mounting network drives.")
+            if self.map_drive(drive, path):  # Tenta sempre montar
+                mounted_drives.append(drive)
+        logging.info(f"Finished mounting network drives. Successfully mounted: {mounted_drives}")
+        return mounted_drives
 
 if __name__ == "__main__":
     manager = NetworkDriveManager()
