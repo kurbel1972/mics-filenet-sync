@@ -4,6 +4,8 @@ from src.core.drives_mount.network_drives import NetworkDriveManager
 from src.core.history_files.copy_to_history import HistoryCopier
 from src.core.filenet.filenet_process import FileNetProcessor
 from src.utils.vpn_active import is_vpn_connected
+from src.mongodb.mongodb_backup import MongoDBBackupManager
+from src.config.config import MONGODUMP_EXE_PATH, MONGODB_BACKUP_DIR
 import os
 import logging
 from src.utils.logging_config import setup_logging
@@ -25,8 +27,8 @@ def main():
     logging.info("************************************ Main - Starting MICS FileNet Sync... ************************************")
     logging.info("************************************                                      ************************************")
     logging.info("**************************************************************************************************************")
-    if is_vpn_connected():  # Commented - also works from office network
-    # if True:  # Allow execution from VPN or office network
+    # if is_vpn_connected():  # Commented - also works from office network
+    if True:  # Allow execution from VPN or office network
         try:
             # 1st: Mount network drives
             print(" Mounting network drives...")
@@ -62,14 +64,33 @@ def main():
             processor = FileNetProcessor()
             processor.process_files(all_files_collected, date_input)
             logging.info("*********************************** Main - End Processing files in FileNet ***********************************")
-            
-            
+        
             try:
                 # Execute your main script
                 subprocess.run(['python', 'src/core/manage_directories/mantain_directory.py'], check=True)
                 print("********************************* Script mantain_directory executed successfully. *********************************")
             except subprocess.CalledProcessError as e:
                 print(f"Error executing the script mantain_directory: {e}", file=sys.stderr)
+
+            # 4th: Backup MongoDB database
+            print(" Starting MongoDB backup...")
+            logging.info("*********************************** Main - Begin MongoDB backup ***********************************")
+
+            mongodump_path = MONGODUMP_EXE_PATH or ""
+            backup_dir = MONGODB_BACKUP_DIR or ""
+
+            if not mongodump_path or not backup_dir:
+                logging.error(f"MongoDB backup aborted: mongodump executable not found at '{mongodump_path}' or backup directory not found at '{backup_dir}'.")
+                print(f"MongoDB backup aborted: mongodump executable not found at '{mongodump_path}' or backup directory not found at '{backup_dir}'.")
+                return
+            
+            backup_manager = MongoDBBackupManager(mongodump_path, backup_dir)
+            backup_success = backup_manager.run_backup()
+            if not backup_success:
+                logging.error("*********************************** Main - MongoDB backup failed ***********************************")
+                return
+
+            logging.info("*********************************** Main - End MongoDB backup ***********************************")
                 
         except Exception as e:
             print(f"Error checking VPN connection: {e}", file=sys.stderr)

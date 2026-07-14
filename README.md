@@ -1,58 +1,76 @@
 # mics-filenet-sync
-<<<<<<< HEAD
-Synchronize files on Filenet and Mics 
-=======
 
-A Python-based tool to collect `.tif` files from mapped drives based on a specific date, check if they exist in the FileNet CMIS repository, and copy only the missing files to a local directory.
+Synchronizes files between MICS source folders and FileNet, and keeps an automated MongoDB backup at the end of each main execution.
 
-This script is the main entry point for the file discovery and FileNet checking process.
-It prompts the user for a date, scans the specified drives for .tif files with that date,
-checks if those files exist in FileNet, and copies any missing files to a specified output folder.
-The script uses functions from the file_discovery, filenet_checker, and file_handler modules
-to perform its tasks. The main function orchestrates the flow of the program.
-The script is designed to be run as a standalone program, and it will execute the main function
-when run directly. The script is modular, with separate modules for file discovery,
-FileNet checking, and file handling, making it easy to maintain and extend.
-The script is designed to be run in a Windows environment, as indicated by the use of
-Windows-style paths in the file handling functions. The script is also designed to be
-user-friendly, with clear output messages indicating the status of each file being processed.
+## What The Project Does
 
-## Features
+The application runs a full operational flow:
 
-- **Date-based search:** Scans for `.tif` files on multiple mapped drives filtered by a date provided by the user.
-- **FileNet check:** Queries the FileNet repository via CMIS to verify if each file exists.
-- **Automatic file transfer:** Copies missing files to a designated local folder.
-- **Modular design:** Follows best practices with separate modules and environment variable configurations.
+1. Mount configured network drives.
+2. Collect and copy history files for the selected date.
+3. Validate files against FileNet and process missing items.
+4. Run a MongoDB backup using mongodump and keep only the latest backup file.
 
-## Project Structure
+## Main Features
 
-mics-filenet-sync/
-├── main.py # Entry point of the application
-├── config.py # Loads environment variables from .env
-├── file_discovery.py # Scans mapped drives for .tif files by date
-├── filenet_checker.py # Checks file existence in the FileNet repository
-├── file_handler.py # Copies missing files to the destination folder
-├── .env # Environment variables (should not be committed)
-├── requirements.txt # List of required Python packages
-└── README.md # Project documentation
+- Date-based file collection from mapped drives.
+- FileNet existence checks through configured endpoints.
+- Processing pipeline for missing files.
+- Automated MongoDB backup after processing.
+- Backup cleanup policy that removes older backup files for the same database.
 
+## MongoDB Backup Behavior
+
+At step 4, the program asks for:
+
+- Full path to mongodump.exe.
+- Destination folder for backup files.
+
+If you press Enter, values from .env are used as defaults.
+
+Before running the backup, the script validates:
+
+- The mongodump.exe file exists.
+- The backup destination directory exists.
+
+Generated backup format:
+
+- mics_filenet_sync_YYYYMMDD_HHMMSS.gz
+
+After a successful backup, older files matching the same database prefix are deleted, keeping only the latest backup.
+
+## Environment Variables
+
+Required values in .env include:
+
+- USERNAME_FILENET
+- PASSWORD_FILENET
+- NETWORK_USERNAME
+- NETWORK_PASSWORD
+- DRIVE1, DRIVE2
+- DRIVE1_PATH, DRIVE2_PATH
+- DEST_DIR
+- FILENET_URL_BASE
+- FILENET_URL_OBJ_STORE
+- MONGODB_URI
+- MONGODB_DBNAME
+- MONGODUMP_EXE_PATH
+- MONGODB_BACKUP_DIR
+
+Example for backup-related variables:
+
+MONGODUMP_EXE_PATH=C:\Program Files\MongoDB\Server\8.0\bin\mongodump.exe
+MONGODB_BACKUP_DIR=C:\MongoBackup
 
 ## Setup
 
-1. **Clone the repository:**
+1. Clone the repository.
+2. Create and activate a virtual environment.
+3. Install dependencies from requirements.txt.
+4. Configure .env.
+5. Run main.py.
 
-   ```bash
-   git clone <repo-url>
-   cd mics-filenet-sync
+## Notes
 
-2. **Create and activate a virtual environment:**
-python -m venv venv
-# For Windows:
-venv\Scripts\activate
-# For Linux/macOS:
-source venv/bin/activate
-
-3. **Install dependencies:**
-
-pip install -r requirements.txt
->>>>>>> 9aec157 (First commit)
+- Target environment is Windows.
+- Ensure MongoDB tools are installed and mongodump.exe path is correct.
