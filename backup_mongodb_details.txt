@@ -1,0 +1,21 @@
+Recover MongoDB database
+
+On my PC
+C:\Users\1070207\AppData\Local\mongodb\mongodb-database-tools-windows\bin\mongodump.exe
+
+On the VM in PowerShell
+New-Item -ItemType Directory -Path "C:\MongoBackup" -Force
+
+& "C:\Program Files\MongoDB\Server\8.0\bin\mongodump.exe" `
+  --uri="mongodb://localhost:27017/mics_filenet_sync" `
+  --archive="C:\MongoBackup\mics_filenet.gz" `
+  --gzip
+
+Copy the file created on the VM to our PC, into:
+C:\Users\1070207\AppData\Local\mongodb\mongodb-database-tools-windows\bin
+
+& "C:\Users\1070207\AppData\Local\mongodb\mongodb-database-tools-windows\bin\mongorestore.exe" `
+  --uri="mongodb://localhost:27017" `
+  --archive="C:\Users\1070207\AppData\Local\mongodb\mongodb-database-tools-windows\bin\mics_filenet.gz" ` -- rename the file
+  --gzip `
+  --drop
